@@ -53,12 +53,12 @@ class GeneticAlgorithm:
                 "std_min"])
 
         if individual_expected_returns <= self.minimum_return:
-            return_penalty = (self.minimum_return - individual_expected_returns) ** 2
+            return_penalty = 100*(self.minimum_return - individual_expected_returns) ** 2
         else:
             return_penalty = 0
 
         if individual_standard_deviation >= self.maximum_risk:
-            risk_penalty = (individual_standard_deviation - self.maximum_risk) ** 2
+            risk_penalty = 100*(individual_standard_deviation - self.maximum_risk) ** 2
         else:
             risk_penalty = 0
 
