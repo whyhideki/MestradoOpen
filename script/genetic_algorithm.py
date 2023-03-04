@@ -8,7 +8,8 @@ from scipy import stats
 
 class GeneticAlgorithm:
     def __init__(self, population_size, num_assets, expected_returns, covariance_matrix
-                 , risk_aversion, max_iterations, mutation_rate, fitness_threshold, normalization_parameters=None):
+                 , risk_aversion, max_iterations, mutation_rate, fitness_threshold
+                 , minimum_return=0, maximum_risk=np.inf, normalization_parameters=None):
         self.num_assets = num_assets
         self.population_size = population_size
         self.expected_returns = expected_returns
@@ -16,6 +17,15 @@ class GeneticAlgorithm:
         self.risk_aversion = risk_aversion
         self.fitness_threshold = fitness_threshold
         self.normalization_parameters = normalization_parameters
+        if normalization_parameters:
+            self.minimum_return = (minimum_return - self.normalization_parameters["returns_min"]) / \
+                                  (self.normalization_parameters["returns_max"] - self.normalization_parameters[
+                                      "returns_min"])
+            self.maximum_risk = (maximum_risk - self.normalization_parameters["std_min"]) / \
+                                (self.normalization_parameters["std_max"] - self.normalization_parameters["std_min"])
+        else:
+            self.minimum_return = minimum_return
+            self.maximum_risk = maximum_risk
         self.iterations = 0
         self.max_iterations = max_iterations
         self.mutation_rate = mutation_rate
@@ -33,6 +43,7 @@ class GeneticAlgorithm:
     def calculate_fitness(self, individual, risk_aversion) -> float:
         individual_expected_returns = np.dot(self.expected_returns, individual)
         individual_standard_deviation = np.sqrt(np.linalg.multi_dot([individual, self.covariance_matrix, individual]))
+
         if self.normalization_parameters:
             individual_expected_returns = (individual_expected_returns - self.normalization_parameters["returns_min"]) \
                                           / (self.normalization_parameters["returns_max"] -
@@ -40,7 +51,19 @@ class GeneticAlgorithm:
             individual_standard_deviation = (individual_standard_deviation - self.normalization_parameters["std_min"]) \
                                             / (self.normalization_parameters["std_max"] - self.normalization_parameters[
                 "std_min"])
-        fitness = risk_aversion * individual_standard_deviation - (1 - risk_aversion) * individual_expected_returns
+
+        if individual_expected_returns < self.minimum_return:
+            return_penalty = (self.minimum_return - individual_expected_returns) ** 2
+        else:
+            return_penalty = 0
+
+        if individual_standard_deviation > self.maximum_risk:
+            risk_penalty = (individual_standard_deviation - self.maximum_risk) ** 2
+        else:
+            risk_penalty = 0
+
+        fitness = risk_aversion * individual_standard_deviation - (1 - risk_aversion) * individual_expected_returns \
+                  + return_penalty + risk_penalty
         return fitness
 
     def chooses_n_ids_from_list(self, n_ids, population) -> list:
@@ -142,7 +165,8 @@ def get_returns_dataframe(raw_data):
 
 
 def optimize_normalized_genetic_algorithm_markowitz(population_size, num_assets, expected_returns, covariance_matrix,
-                                                    risk_aversion, max_iterations, mutation_rate, fitness_threshold):
+                                                    risk_aversion, max_iterations, mutation_rate, fitness_threshold,
+                                                    returns_percentile, volatility_tolerance):
     normalization_parameters = {}
 
     no_risk = 0
@@ -165,8 +189,11 @@ def optimize_normalized_genetic_algorithm_markowitz(population_size, num_assets,
                                                                        best_volatility_individual]))
     # print(f"Iterations risk = 1: {ga.iterations}\n"
     #       f"Best Individual std: {normalization_parameters['std_min']}")
+    minimum_return = np.percentile(expected_returns, returns_percentile)
+    maximum_risk = (1 + volatility_tolerance) * normalization_parameters["std_min"]
     ga = GeneticAlgorithm(population_size, num_assets, expected_returns, covariance_matrix, risk_aversion,
-                          max_iterations, mutation_rate, fitness_threshold, normalization_parameters)
+                          max_iterations, mutation_rate, fitness_threshold, minimum_return, maximum_risk,
+                          normalization_parameters)
     best_individual = ga.run()
     bi_series = pd.Series(best_individual, index=expected_returns.index)
     # print(f"Iterations normalized: {ga.iterations}\n"
