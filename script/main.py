@@ -31,7 +31,7 @@ for parameters in tqdm(combination):
 
     weights_df = pd.DataFrame(columns=df.columns)
 
-    for i in range(window_size, len(df), step_size):
+    for i in tqdm(range(window_size, len(df), step_size)):
         historical_data = df.iloc[i - window_size:i]
 
         population_size = 10
