@@ -9,7 +9,7 @@ from scipy import stats
 class GeneticAlgorithm:
     def __init__(self, population_size, num_assets, expected_returns, covariance_matrix
                  , risk_aversion, max_iterations, mutation_rate, fitness_threshold
-                 , minimum_return=0, maximum_risk=np.inf, normalization_parameters=None):
+                 , minimum_return=-np.inf, maximum_risk=np.inf, normalization_parameters=None):
         self.num_assets = num_assets
         self.population_size = population_size
         self.expected_returns = expected_returns
@@ -52,12 +52,12 @@ class GeneticAlgorithm:
                                             / (self.normalization_parameters["std_max"] - self.normalization_parameters[
                 "std_min"])
 
-        if individual_expected_returns < self.minimum_return:
+        if individual_expected_returns <= self.minimum_return:
             return_penalty = (self.minimum_return - individual_expected_returns) ** 2
         else:
             return_penalty = 0
 
-        if individual_standard_deviation > self.maximum_risk:
+        if individual_standard_deviation >= self.maximum_risk:
             risk_penalty = (individual_standard_deviation - self.maximum_risk) ** 2
         else:
             risk_penalty = 0
