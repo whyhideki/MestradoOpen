@@ -1,0 +1,7 @@
+pandas
+pyportfolioopt
+matplotlib
+openpyxl
+gurobipy
+tqdm
+pytest
