@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import scipy
 
 
 class PerformanceTracker:
@@ -32,6 +33,9 @@ class PerformanceTracker:
             return beta
         else:
             return None
+
+    def portfolio_value_at_risk(self, alpha=0.05):
+        return scipy.stats.norm.ppf(alpha, np.mean(self.daily_returns), np.std(self.daily_returns))
 
     def annualized_return(self):
         cumulative_return = (1 + self.daily_returns).prod()
@@ -68,10 +72,10 @@ class PerformanceTracker:
         result = {
             'sharpe': self.sharpe_ratio(),
             'max_drawdown': self.max_drawdown(),
+            'value_at_risk_daily_95': self.portfolio_value_at_risk(),
             'beta': self.portfolio_beta(),
             'annual_return': self.annualized_return(),
             'annual_std': self.annualized_std_return()
         }
         self.plot_cumulative_returns()
         return result
-

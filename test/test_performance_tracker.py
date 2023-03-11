@@ -44,3 +44,6 @@ class TestPerformanceTracker:
 
     def test_max_drawdown(self, performance_tracker):
         assert performance_tracker.max_drawdown() == pytest.approx(-51.50672229948996)
+
+    def test_value_at_risk(self, performance_tracker):
+        assert performance_tracker.portfolio_value_at_risk() == pytest.approx(-0.0676745747631565)
