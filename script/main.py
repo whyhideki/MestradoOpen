@@ -20,9 +20,9 @@ if json_path.is_file():
     with open(json_path, 'r') as file:
         data = json.load(file)
 
+combination = [c for c in combination if ';'.join([str(x) for x in c]) not in data.keys()]
+
 for parameters in tqdm(combination):
-    if ';'.join([str(x) for x in parameters]) in data.keys():
-        continue
     window_size = parameters[0]
     step_size = parameters[1]
     risk_aversion = parameters[2]
